@@ -27,4 +27,5 @@ nosetests.xml
 .project
 .pydevproject
 
-*.yaml~
+.yaml~
+.py~
