@@ -1,0 +1,95 @@
+{% if submitted == 1  %}
+  <div class="alert alert-success alert-dismissable"><strong>Congrats!</strong> You successfully submitted your complaint.<button type="button" class="close" data-dismiss="alert" aria-hidden="true">&times;</button></div>
+{% elif submitted == 0 %}
+  <div class="alert alert-danger alert-dismissable"><strong>Oh snap!</strong> Try correcting the errors and submit again.<button type="button" class="close" aria-hidden="true" data-dismiss="alert">&times;</button></div>
+{% endif %}
+<form id="complaintForm" role="form" action="{{site_url}}submit/" method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  {{ complaint_form.non_field_errors }}
+  <div class="form-group">
+    {{ complaint_form.phno.errors }}
+    <label for="id_phno">Phone Number</label>
+    <input type="tel" class="form-control" id="id_phno" name="phno" placeholder="Enter phone number">
+  </div>
+  <div class="form-group">
+    {{ complaint_form.name.errors }}
+    <label for="id_name">Name</label>
+    <input type="text" class="form-control" id="id_name" name="name" placeholder="Enter Name">
+  </div>
+  <div class="form-group">
+    {{ complaint_form.title.errors }}
+    <label for="id_title">Complaint in brief</label>
+    <input type="text" class="form-control" id="id_title" name="title" placeholder="Complaint title">
+    <p class="help-block">Restrict to one line which most accurately describes your complaint</p>
+  </div>
+  <div class="form-group">
+    {{ complaint_form.desc.errors }}
+    <label for="id_desc">Describe in detail</label>
+    <textarea class="form-control" rows="3" name="desc" placeholder="Pour your heart out!" id="id_desc"></textarea>
+  </div>
+  <div class="form-group">
+    {{ complaint_form.landmark.errors }}
+    <label for="id_landmark">Nearby landmark</label>
+    <input type="text" class="form-control" id="id_landmark" name="landmark" placeholder="Complaint title">
+  </div>
+  <div class="form-group">
+    {{ complaint_form.photo.errors }}
+    <label for="id_photo">Photo</label>
+    <input type="file" class="form-control" id="id_photo" name="photo" placeholder="Photo">
+  </div>
+  <input type="hidden" name="loc" id="id_loc">
+  <input type="hidden" name="add" id="id_add">
+  <p><button type="submit" class="btn btn-default">Submit!</button></p>
+</form>
+<script type="text/javascript">
+  // variable to hold request
+  var request;
+  // bind to the submit event of our form
+  $("#complaintForm").submit(function(event){
+      // abort any pending request
+      if (request) {
+          request.abort();
+      }
+      // setup some local variables
+      var $form = $(this);
+      // let's select and cache all the fields
+      var $inputs = $form.find("input, select, button, textarea");
+      // serialize the data in the form
+      var serializedData = $form.serialize();
+
+      // let's disable the inputs for the duration of the ajax request
+      $inputs.prop("disabled", true);
+
+      // fire off the request to /form.php
+      request = $.ajax({
+          url: "/submit/",
+          type: "post",
+          data: serializedData
+      });
+
+      // callback handler that will be called on success
+      request.done(function (response, textStatus, jqXHR){
+          // log a message to the console
+          $("#formPane").html(response);
+      });
+
+      // callback handler that will be called on failure
+      request.fail(function (jqXHR, textStatus, errorThrown){
+          // log the error to the console
+          console.error(
+              "The following error occured: "+
+              textStatus, errorThrown
+          );
+      });
+
+      // callback handler that will be called regardless
+      // if the request failed or succeeded
+      request.always(function () {
+          // reenable the inputs
+          $inputs.prop("disabled", false);
+      });
+
+      // prevent default posting of form
+      event.preventDefault();
+  });
+</script>

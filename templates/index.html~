@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="">
+    <meta name="author" content="S.R.Manikandasriram">
+
+    <title>Municipalithree | Ericsson IDP @ Shaastra 2014 </title>
+
+    <!-- Bootstrap core CSS -->
+    <link href="{{static_url}}css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="{{static_url}}css/home.css" rel="stylesheet">
+
+    <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!--[if lt IE 9]>
+      <script src="{{static_url}}js/html5shiv.js"></script>
+      <script src="{{static_url}}js/respond.min.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{{site_url}}#">Municipalithree</a>
+        </div>
+        <div class="navbar-collapse collapse">
+          <ul class="nav navbar-nav">
+            <li><a href="{{site_url}}browse/" class="btn">Browse Complaints</a></li>
+            <li><a href="{{site_url}}stats/" class="btn">Statistics</a></li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="{{ login_url }}" class="btn">Sign in</a></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div id="wrap">
+      <div class="container">
+        <div style="height:60px;"></div>
+        <div class="row">
+          <div class="col-md-8">
+            <h3>Make a change. Voice your needs!</h3>
+            <div id="map-canvas"></div>
+          </div>
+          <div class="col-md-4" id="sidePane">
+            <div id="formPane">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="footer">
+      <div class="container">
+        <p class="text-muted">Developed by <a href="#">Team Municipalithree</a> for Ericsson IDP @ <a href="http://www.shaastra.org">Shaastra 2014</a></p>
+      </div>
+    </div>
+
+    <!-- Bootstrap core JavaScript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster -->
+    <script src="{{static_url}}js/jquery-1.10.2.min.js"></script>
+    <script src="{{static_url}}js/bootstrap.min.js"></script>
+    <script type="text/javascript">
+    // Note: This example requires that you consent to location sharing when
+    // prompted by your browser. If you see a blank space instead of the map, this
+    // is probably because you have denied permission for location sharing.
+
+    var map;
+    var geocoder;
+    var loc;
+    var infowindow;
+    var marker;
+    function initialize() {
+      google.maps.visualRefresh = true;
+      geocoder = new google.maps.Geocoder();
+
+      var mapOptions = {
+        zoom: 16
+      };
+      map = new google.maps.Map(document.getElementById('map-canvas'),
+          mapOptions);
+
+      // Try HTML5 geolocation
+      if(navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          var pos = new google.maps.LatLng(position.coords.latitude,
+                                           position.coords.longitude);
+
+          $("#id_loc").attr('value',position.coords.latitude+","+position.coords.longitude);
+          var options = {
+            map: map,
+            position: pos,
+          };
+          infowindow = new google.maps.InfoWindow(options);
+          codeLatLng(pos);
+
+          map.setCenter(pos);
+        }, function() {
+          handleNoGeolocation(true);
+        });
+      } else {
+        // Browser doesn't support Geolocation
+        handleNoGeolocation(false);
+      }
+      $("#map-canvas").css({'width':'100%','height':'445px','margin-bottom':'15px'});
+      displayNearbyComplaints();
+    }
+
+    function handleNoGeolocation(errorFlag) {
+      if (errorFlag) {
+        var content = 'Error: The Geolocation service failed.';
+      } else {
+        var content = 'Error: Your browser doesn\'t support geolocation.';
+      }
+
+      var options = {
+        map: map,
+        position: new google.maps.LatLng(60, 105),
+        content: content
+      };
+
+      infowindow = new google.maps.InfoWindow(options);
+      map.setCenter(options.position);
+    }
+    
+    function codeLatLng(latlng) {
+      geocoder.geocode({'latLng': latlng}, function(results, status) {
+        if (status == google.maps.GeocoderStatus.OK) {
+          if (results[1]) {
+            marker = new google.maps.Marker({
+                position: latlng,
+                map: map
+            });
+            infowindow.setContent("You are here!");
+            infowindow.open(map, marker);
+            loc = results[1].formatted_address;
+            $("#id_add").attr('value',position.coords.latitude+","+position.coords.longitude);
+            $("#sidePane").prepend("<h3>What is lacking at " + loc + "?</h3>");
+          }
+        } else {
+          alert("Geocoder failed due to: " + status);
+        }
+      });
+    }
+
+    function displayNearbyComplaints(){
+      {% for c in complaints %}
+      pos = new google.maps.LatLng({{c.loc.lat}}, {{c.loc.lon}})
+      content = "{{c.title}}"
+      var options = {
+        map: map,
+        position: pos,
+        content: content
+      };
+      var infowindow{{forloop.counter}} = new google.maps.InfoWindow(options);
+      var marker{{forloop.counter}} = new google.maps.Marker({
+          position: pos,
+          map: map
+      });
+      {% endfor %}
+    }
+
+    function loadScript() {
+      var script = document.createElement('script');
+      script.type = 'text/javascript';
+      script.src = 'https://maps.googleapis.com/maps/api/js?v=3.exp&sensor=true&' +
+          'callback=initialize';
+      document.body.appendChild(script);
+    }
+
+    window.onload = loadScript;
+    $("document").ready(function(){
+      $("#formPane").load("{{site_url}}submit/");
+    });
+    </script>
+  </body>
+</html>
